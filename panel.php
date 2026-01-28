@@ -43,7 +43,7 @@ $security = Typecho_Widget::widget('Widget_Security');
 $token = $security->getToken($baseUrl);
 $currentLabel = $tabs[$type] ?? '文件';
 $uploadLabel = '上传' . $currentLabel;
-$cssVersion = '0.1.0';
+$cssVersion = '0.1.1';
 ?>
 
 <link rel="stylesheet" href="<?php echo Helper::options()->pluginUrl; ?>/MediaLibraryLite/assets/css/panel.css?v=<?php echo $cssVersion; ?>">
@@ -74,17 +74,33 @@ $cssVersion = '0.1.0';
             <button class="ml-btn ml-btn-outline" type="button" data-ml-action="open-upload">上传文件</button>
         </div>
     <?php else: ?>
-        <?php if ($type === 'image'): ?>
+        <?php if ($type === 'image' || $type === 'video'): ?>
             <div class="ml-grid" data-ml-view="grid">
                 <?php foreach ($items as $item): ?>
-                    <div class="ml-card" data-cid="<?php echo (int)$item['cid']; ?>" data-url="<?php echo htmlspecialchars($item['url']); ?>" data-name="<?php echo htmlspecialchars($item['name']); ?>">
-                        <button type="button" class="ml-card-thumb" data-ml-action="preview">
-                            <img src="<?php echo htmlspecialchars($item['url']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" loading="lazy">
-                        </button>
+                    <div class="ml-card"
+                         data-cid="<?php echo (int)$item['cid']; ?>"
+                         data-url="<?php echo htmlspecialchars($item['url']); ?>"
+                         data-name="<?php echo htmlspecialchars($item['name']); ?>"
+                         data-mime="<?php echo htmlspecialchars($item['mime'] ?? ''); ?>">
+                        <?php if ($type === 'image'): ?>
+                            <button type="button" class="ml-card-thumb" data-ml-action="preview">
+                                <img src="<?php echo htmlspecialchars($item['url']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" loading="lazy">
+                            </button>
+                        <?php else: ?>
+                            <button type="button" class="ml-card-thumb ml-video-thumb" data-ml-action="play-video">
+                                <div class="ml-video-thumb-inner">
+                                    <div class="ml-video-play" aria-hidden="true"></div>
+                                    <div class="ml-video-tip">点击播放</div>
+                                </div>
+                            </button>
+                        <?php endif; ?>
                         <div class="ml-card-meta">
                             <div class="ml-card-name" title="<?php echo htmlspecialchars($item['name']); ?>"><?php echo htmlspecialchars($item['name']); ?></div>
                             <div class="ml-card-actions">
                                 <button class="ml-action-btn" type="button" data-ml-action="copy">复制</button>
+                                <?php if ($type === 'video'): ?>
+                                    <button class="ml-action-btn" type="button" data-ml-action="play-video">播放</button>
+                                <?php endif; ?>
                                 <button class="ml-action-btn" type="button" data-ml-action="open">打开</button>
                                 <button class="ml-action-btn ml-danger" type="button" data-ml-action="delete">删除</button>
                             </div>
@@ -154,6 +170,20 @@ $cssVersion = '0.1.0';
             <div class="ml-modal-body">
                 <img class="ml-preview-img" data-ml-preview-img alt="">
                 <div class="ml-preview-meta" data-ml-preview-meta></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ml-modal" data-ml-modal="video" aria-hidden="true">
+        <div class="ml-modal-backdrop" data-ml-action="close-modal"></div>
+        <div class="ml-modal-card ml-modal-card-wide" role="dialog" aria-modal="true" aria-labelledby="ml-video-title">
+            <div class="ml-modal-header">
+                <div class="ml-modal-title" id="ml-video-title">视频播放</div>
+                <button class="ml-text-btn" type="button" data-ml-action="close-modal">关闭</button>
+            </div>
+            <div class="ml-modal-body">
+                <video class="ml-preview-video" data-ml-preview-video controls preload="metadata"></video>
+                <div class="ml-preview-meta" data-ml-video-meta></div>
             </div>
         </div>
     </div>

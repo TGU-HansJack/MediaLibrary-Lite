@@ -21,6 +21,17 @@
       modalElement.classList.remove("is-open");
       modalElement.setAttribute("aria-hidden", "true");
     });
+
+    const videoElement = document.querySelector("[data-ml-preview-video]");
+    if (videoElement instanceof HTMLVideoElement) {
+      try {
+        videoElement.pause();
+        videoElement.removeAttribute("src");
+        videoElement.load();
+      } catch (e) {
+        // ignore
+      }
+    }
   }
 
   function toast(message) {
@@ -150,6 +161,8 @@
       toast("无法预览该文件");
       return;
     }
+
+    closeAllModals();
     const modalElement = document.querySelector('[data-ml-modal="preview"]');
     if (!modalElement) return;
 
@@ -165,6 +178,41 @@
     }
 
     openModal("preview");
+  }
+
+  function handleVideoPlay(url, name) {
+    if (!url) {
+      toast("无法播放该文件");
+      return;
+    }
+
+    closeAllModals();
+    const modalElement = document.querySelector('[data-ml-modal="video"]');
+    if (!modalElement) return;
+
+    const videoElement = queryOne("[data-ml-preview-video]", modalElement);
+    const metaElement = queryOne("[data-ml-video-meta]", modalElement);
+    const titleElement = queryOne("#ml-video-title", modalElement);
+
+    if (titleElement) {
+      titleElement.textContent = name ? `视频播放：${name}` : "视频播放";
+    }
+
+    if (metaElement) {
+      metaElement.textContent = url || "";
+    }
+
+    if (videoElement instanceof HTMLVideoElement) {
+      videoElement.pause();
+      videoElement.src = url;
+      videoElement.load();
+      const playPromise = videoElement.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {});
+      }
+    }
+
+    openModal("video");
   }
 
   function initUploadModal() {
@@ -246,6 +294,9 @@
         break;
       case "preview":
         handlePreview(payload.url, payload.name);
+        break;
+      case "play-video":
+        handleVideoPlay(payload.url, payload.name);
         break;
       default:
         break;
